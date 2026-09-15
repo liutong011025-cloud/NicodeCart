@@ -1,5 +1,5 @@
 /* Presentation-only translation: robot state and program identifiers never change. */
-const EN = {'如果':'If',
+const EN = {'如果':'If','未觸發':'No match','規則 1':'Rule 1','規則 2':'Rule 2','動作持續':'Run actions for','秒，再判斷':'seconds, then check again','未觸發規則':'No rule triggered','同時成立時，先執行規則 1。':'When both match, run rule 1 first.','如果':'If',
  '請填寫所有參數。':'Fill in all parameters.','參數必須是有效數字。':'Enter valid numbers.','請安裝對應感測器。':'Install the matching sensor.','自行填寫':'Enter a value','請選擇':'Choose','右光電規則':'Right sensor rule','左光電規則':'Left sensor rule','超音波條件行駛':'Drive until distance','顏色條件行駛':'Drive until color','輪速條件行駛':'Drive until speed','朝向條件行駛':'Drive until heading','碰撞條件行駛':'Drive until contact','直到':'Until',
 
  '未安裝馬達':'No motor installed','請選擇馬達規格':'Choose a motor type','請先選擇馬達。':'Choose a motor first.','請先選擇馬達規格。':'Choose a motor type first.',

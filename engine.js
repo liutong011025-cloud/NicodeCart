@@ -59,14 +59,14 @@ class RoverEngine{
       this.steer=b.angle;this.left=this.right=this.speed*b.power/100;this.rule='舵機轉向 '+b.angle+'°';if(this.elapsed>=b.seconds)this.advance();
     }else if(b.type==='senseLoop'){
       if(!this.config.parts.has('camera')){this.fail('沒有前置攝像頭，無法辨識站點。請用金幣安裝攝像頭。');return}
-      if((b.leftRule&&!this.config.parts.has('left'))||(b.rightRule&&!this.config.parts.has('right'))){this.fail('程式使用了尚未安裝的光電感測器。請安裝對應零件或停用該判斷。');return}
+      if((b.leftRule&&!this.config.parts.has(b.leftSensor===1?'right':'left'))||(b.rightRule&&!this.config.parts.has(b.rightSensor===0?'left':'right'))){this.fail('程式使用了尚未安裝的光電感測器。請安裝對應零件或停用該判斷。');return}
       if(this.camera(b.target)){this.detectionTarget=b.target;this.detected=true;this.eventTime=this.time;this.stopTime=null;this.record('攝像頭辨識到'+STATIONS[b.target].name);this.message='已辨識'+STATIONS[b.target].name+'，開始執行後續計時積木。';this.advance();return}
       this.pulseLeft=Math.max(0,this.pulseLeft-dt);this.pulseRight=Math.max(0,this.pulseRight-dt);
-      if(this.pulseRight===0&&this.pulseLeft===0){if(b.rightRule&&this.sensor('right')===(b.rightBlack!==false))this.pulseRight=b.pulse;else if(b.leftRule&&this.sensor('left')===(b.leftBlack!==false))this.pulseLeft=b.pulse}
+      if(this.pulseRight===0&&this.pulseLeft===0){if(b.rightRule&&this.sensor(b.rightSensor===0?'left':'right')===(b.rightBlack!==false))this.pulseRight=b.pulse;else if(b.leftRule&&this.sensor(b.leftSensor===1?'right':'left')===(b.leftBlack!==false))this.pulseLeft=b.pulse}
       const speed=this.speed*b.power/100;
-      this.left=this.pulseLeft>0?speed*(b.leftThenLeft??0)/100:this.pulseRight>0?speed*(b.rightThenLeft??100)/100:speed;
-      this.right=this.pulseLeft>0?speed*(b.leftThenRight??100)/100:this.pulseRight>0?speed*(b.rightThenRight??0)/100:speed;
-      this.rule=this.pulseRight>0?'右光電規則':this.pulseLeft>0?'左光電規則':'未觸發 → 兩輪直行';
+      this.left=this.pulseLeft>0?speed*(b.leftThenLeft??0)/100:this.pulseRight>0?speed*(b.rightThenLeft??100)/100:speed*(b.idleLeft??100)/100;
+      this.right=this.pulseLeft>0?speed*(b.leftThenRight??100)/100:this.pulseRight>0?speed*(b.rightThenRight??0)/100:speed*(b.idleRight??100)/100;
+      this.rule=this.pulseRight>0?'規則 1':this.pulseLeft>0?'規則 2':'未觸發規則';
       if(this.config.motor===1){this.left=this.right=(this.left+this.right)/2}
     }else if(b.type==='driveTime'){
       this.left=this.right=this.speed*b.power/100;this.rule='兩輪直行';if(this.elapsed>=b.seconds){this.advance()}
@@ -94,5 +94,5 @@ class RoverEngine{
 }
 const namesForSensors={ultra:'超音波',color:'顏色',encoder:'輪速',gyro:'朝向',touch:'碰撞'};
 function parameterError(b){for(const [k,v] of Object.entries(b)){if(v===null||v==='')return '請填寫所有參數。';if(typeof v==='number'&&!Number.isFinite(v))return '參數必須是有效數字。'}return ''}
-function blockRequirement(b,c){const has=id=>c.parts.has(id);if(b.type.endsWith('Until')){if(!has(b.type.slice(0,-5)))return '請安裝對應感測器。';if(!c.motor||!c.spec)return '請先選擇馬達規格。';if((c.motor===1||has('servo'))&&b.left!==b.right)return '獨立輪速積木需要差速雙馬達配置。';}if(['senseLoop','driveTime','wheelTime','servoTime','relayRoute','relayGrab'].includes(b.type)){if(!c.motor)return '請先選擇馬達。';if(!c.spec)return '請先選擇馬達規格。';}if(b.type==='senseLoop'){if(has('servo'))return '光電差速循環需卸下轉向舵機，或改用舵機積木。';if(c.motor===1)return '左右輪差速積木需要至少兩個獨立馬達。';if((b.leftRule&&!has('left'))||(b.rightRule&&!has('right')))return '需要安裝程式使用的左右光電感測器。';if(!has('camera'))return '等待站點辨識需要前置攝像頭。'}if(['grab','drop'].includes(b.type)&&!has('arm'))return '抓放積木需要機械臂。';if(b.type==='wheelTime'&&(c.motor===1||has('servo'))&&b.left!==b.right)return '獨立輪速積木需要差速雙馬達配置。';if(['relayRoute','servoTime'].includes(b.type)&&!has('servo'))return '此積木需要轉向舵機。';if(['relayRoute','relayGrab'].includes(b.type)&&!has('relay'))return '此積木需要時間繼電器。';if(['relayRoute','relayGrab'].includes(b.type)&&!has('camera'))return '此積木需要前置攝像頭。';if(b.type==='relayGrab'&&!has('arm'))return '此積木需要機械臂。';return ''}
+function blockRequirement(b,c){const has=id=>c.parts.has(id);if(b.type.endsWith('Until')){if(!has(b.type.slice(0,-5)))return '請安裝對應感測器。';if(!c.motor||!c.spec)return '請先選擇馬達規格。';if((c.motor===1||has('servo'))&&b.left!==b.right)return '獨立輪速積木需要差速雙馬達配置。';}if(['senseLoop','driveTime','wheelTime','servoTime','relayRoute','relayGrab'].includes(b.type)){if(!c.motor)return '請先選擇馬達。';if(!c.spec)return '請先選擇馬達規格。';}if(b.type==='senseLoop'){if(has('servo'))return '光電差速循環需卸下轉向舵機，或改用舵機積木。';if(c.motor===1)return '左右輪差速積木需要至少兩個獨立馬達。';if((b.leftRule&&!has(b.leftSensor===1?'right':'left'))||(b.rightRule&&!has(b.rightSensor===0?'left':'right')))return '需要安裝程式使用的左右光電感測器。';if(!has('camera'))return '等待站點辨識需要前置攝像頭。'}if(['grab','drop'].includes(b.type)&&!has('arm'))return '抓放積木需要機械臂。';if(b.type==='wheelTime'&&(c.motor===1||has('servo'))&&b.left!==b.right)return '獨立輪速積木需要差速雙馬達配置。';if(['relayRoute','servoTime'].includes(b.type)&&!has('servo'))return '此積木需要轉向舵機。';if(['relayRoute','relayGrab'].includes(b.type)&&!has('relay'))return '此積木需要時間繼電器。';if(['relayRoute','relayGrab'].includes(b.type)&&!has('camera'))return '此積木需要前置攝像頭。';if(b.type==='relayGrab'&&!has('arm'))return '此積木需要機械臂。';return ''}
 if(typeof module!=='undefined')module.exports={RoverEngine,defaultConfig,defaultProgram,configCost,PARTS,blockRequirement};
